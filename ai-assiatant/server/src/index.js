@@ -33,7 +33,7 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-const allowedOrigins = (process.env.CLIENT_URLS || 'http://localhost:5173').split(',');
+const allowedOrigins = (process.env.CLIENT_URLS || 'http://localhost:5173 || https://ai-assistant-ten-theta.vercel.app').split(',');
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.includes(origin)) {

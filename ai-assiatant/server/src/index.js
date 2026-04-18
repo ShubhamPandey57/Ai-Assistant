@@ -44,6 +44,27 @@ app.use(cors({
   },
   credentials: true,
 }));
+
+// Handle preflight requests for all routes
+app.options('*', cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
+
+// Set custom headers for all responses (for CORS)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || allowedOrigins[0]);
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));

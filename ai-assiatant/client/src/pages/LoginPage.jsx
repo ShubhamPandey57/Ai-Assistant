@@ -1,0 +1,189 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import './AuthPages.css';
+
+const LoginPage = () => {
+  const [form, setForm] = useState({ email: '', adminId: '', password: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isAdminLogin, setIsAdminLogin] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const user = await login(isAdminLogin ? null : form.email, form.password, isAdminLogin ? form.adminId : null);
+      navigate(user.isAdmin ? '/admin' : '/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-split-layout">
+      {/* Left Side - Graphic/Brand */}
+      <div className="auth-left">
+        <div className="auth-left-content">
+          <div className="auth-left-header">
+            <p>Global learning made simple – AI study solutions for you.</p>
+          </div>
+          
+          <div className="auth-left-main">
+            <h1>Manage<br />your learning</h1>
+            
+            {/* Phone Mockup Representation */}
+            <div className="phone-mockup">
+              <div className="phone-screen">
+                <div className="phone-notch"></div>
+                <div className="phone-header">
+                  <span className="date">Week 4-10 July</span>
+                  <div className="icon-calendar"></div>
+                </div>
+                <div className="balance">
+                  <span className="amount">897.00</span>
+                  <span className="currency">pts</span>
+                </div>
+                <div className="chart">
+                  <div className="bar" style={{height: '40%'}}></div>
+                  <div className="bar" style={{height: '60%'}}></div>
+                  <div className="bar" style={{height: '50%'}}></div>
+                  <div className="bar highlight" style={{height: '80%'}}></div>
+                  <div className="bar" style={{height: '40%'}}></div>
+                  <div className="bar" style={{height: '70%'}}></div>
+                  <div className="bar" style={{height: '90%'}}></div>
+                </div>
+                <div className="category-section">
+                  <span className="cat-title">Category</span>
+                  <span className="cat-amount">950.00</span>
+                </div>
+                <div className="widgets">
+                  <div className="widget-box light"></div>
+                  <div className="widget-box dark"></div>
+                  <div className="widget-box darkest"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="auth-left-footer">
+            <div className="accessibility-icon">
+              <span>⧓</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Side - Form */}
+      <div className="auth-right">
+        <div className="auth-right-content">
+          <div className="auth-right-header">
+            <Link to="/" className="auth-logo-modern" style={{ textDecoration: 'none' }}>
+              <div className="circle-logo"></div>
+              <span className="logo-text">StudyAI</span>
+            </Link>
+            <Link to="/register" className="auth-signup-link">
+              <span className="user-icon">◎</span> Sign Up
+            </Link>
+          </div>
+
+          <div className="auth-form-container">
+            <h2 className="auth-heading">Sign In</h2>
+            
+            <div className="role-toggle-container">
+              <button 
+                className={`role-toggle-btn ${!isAdminLogin ? 'active' : ''}`}
+                onClick={() => setIsAdminLogin(false)}
+              >
+                User
+              </button>
+              <button 
+                className={`role-toggle-btn ${isAdminLogin ? 'active' : ''}`}
+                onClick={() => setIsAdminLogin(true)}
+              >
+                Admin
+              </button>
+            </div>
+            
+            {error && <div className="alert alert-error" role="alert">⚠ {error}</div>}
+
+            <form onSubmit={handleSubmit} className="auth-form-modern">
+              {!isAdminLogin ? (
+                <div className="form-group-modern">
+                  <input
+                    id="login-email"
+                    type="email"
+                    className="input-modern"
+                    placeholder="Email or Username"
+                    value={form.email}
+                    onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+              ) : (
+                <div className="form-group-modern">
+                  <input
+                    id="login-adminId"
+                    type="text"
+                    className="input-modern"
+                    placeholder="Admin ID"
+                    value={form.adminId}
+                    onChange={e => setForm(p => ({ ...p, adminId: e.target.value }))}
+                    required
+                    autoComplete="username"
+                  />
+                </div>
+              )}
+
+              <div className="form-group-modern">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  className="input-modern"
+                  placeholder="Password"
+                  value={form.password}
+                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+                  required
+                  autoComplete="current-password"
+                />
+                <button 
+                  type="button" 
+                  className="eye-toggle" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? '👁' : '⏚'} 
+                  {/* Note: using unicode as placeholders for the slashed-eye icon */}
+                </button>
+              </div>
+
+              <div className="auth-forgot">
+                <Link to="#">Forgot password?</Link>
+              </div>
+
+              <button id="login-submit" type="submit" className="btn-modern-submit" disabled={loading}>
+                {loading ? <><span className="spinner-modern" /></> : <><span>→</span> Sign In</>}
+              </button>
+            </form>
+          </div>
+
+          <div className="auth-right-footer">
+            <div className="footer-links">
+              <Link to="#">Contact Us</Link>
+              <span className="lang-selector">English ⌄</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LoginPage;

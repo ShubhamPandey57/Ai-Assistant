@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 
 const authRoutes = require('./routes/auth.routes');
@@ -19,9 +20,28 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+// Middleware to check database connection
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      status: 503,
+      message: 'Database connection lost. Please try again in a moment.',
+      type: 'SERVICE_UNAVAILABLE'
+    });
+  }
+  next();
+});
+
 // Middleware
+const allowedOrigins = (process.env.CLIENT_URLS || 'http://localhost:5173').split(',');
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -46,6 +66,24 @@ app.get('/api/health', (req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`\n🚀 Server running on http://localhost:${PORT}`);
 });
+
+// Handle graceful shutdown
+const shutdown = (signal) => {
+  console.log(`\n📦 ${signal} received. Starting graceful shutdown...`);
+  server.close(() => {
+    console.log('✅ Server closed gracefully');
+    process.exit(0);
+  });
+
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    console.error('❌ Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

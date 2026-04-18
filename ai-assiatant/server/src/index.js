@@ -57,9 +57,17 @@ app.use('/api/flashcards', flashcardRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
 
+// Serve static files from the React app build directory
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Catch all handler: send back React's index.html file for client-side routing
+app.use((req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
 // Error handler (must be last)

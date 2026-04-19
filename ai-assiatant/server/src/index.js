@@ -99,25 +99,31 @@ app.use((req, res) => {
 // Error handler (must be last)
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`\n🚀 Server running on http://localhost:${PORT}`);
-});
-
-// Handle graceful shutdown
-const shutdown = (signal) => {
-  console.log(`\n📦 ${signal} received. Starting graceful shutdown...`);
-  server.close(() => {
-    console.log('✅ Server closed gracefully');
-    process.exit(0);
+if (process.env.VERCEL) {
+  // On Vercel, export the app for serverless handler
+  module.exports = app;
+} else {
+  // Local/dev: start the server normally
+  const PORT = process.env.PORT || 5000;
+  const server = app.listen(PORT, () => {
+    console.log(`\n🚀 Server running on http://localhost:${PORT}`);
   });
 
-  // Force shutdown after 10 seconds
-  setTimeout(() => {
-    console.error('❌ Forced shutdown after timeout');
-    process.exit(1);
-  }, 10000);
-};
+  // Handle graceful shutdown
+  const shutdown = (signal) => {
+    console.log(`\n📦 ${signal} received. Starting graceful shutdown...`);
+    server.close(() => {
+      console.log('✅ Server closed gracefully');
+      process.exit(0);
+    });
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      console.error('❌ Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}

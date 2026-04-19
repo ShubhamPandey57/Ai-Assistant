@@ -33,10 +33,13 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-const allowedOrigin = 'https://ai-assistant-6cnp.vercel.app';
+const allowedOrigins = [
+  'https://ai-assistant-6cnp.vercel.app',
+  'http://localhost:5173'
+];
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || origin === allowedOrigin) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -46,9 +49,9 @@ app.use(cors({
 }));
 
 // Handle preflight requests for all routes
-app.options('*', cors({
+app.options(/.*/, cors({
   origin: (origin, callback) => {
-    if (!origin || origin === allowedOrigin) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -59,7 +62,9 @@ app.options('*', cors({
 
 // Set custom headers for all responses (for CORS)
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin === allowedOrigin ? allowedOrigin : '');
+  if (allowedOrigins.includes(req.headers.origin)) {
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+  }
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -79,7 +84,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
 
 // Serve static files from the React app build directory
-app.use(express.static(path.join(__dirname, '../client/dist')));
+app.use(express.static(path.join(__dirname, '../../client/dist')));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -88,7 +93,7 @@ app.get('/api/health', (req, res) => {
 
 // Catch all handler: send back React's index.html file for client-side routing
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
 });
 
 // Error handler (must be last)
